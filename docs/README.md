@@ -41,7 +41,7 @@ MCP エンドポイント：`https://www.microsoft.com/releasecommunications/mcp
 | Lab | 内容 |
 |-----|-----|
 | Lab 0 | [環境セットアップ（リポジトリ fork + Foundry プロジェクト + gpt-4.1-mini デプロイ）](00-setup.md) |
-| Lab 1 | [Agent Skills の作成と Copilot での利用](01-agent-skills.md) |
+| Lab 1 | [Agent Skills の作成と Copilot での利用](01-agent-skills.md)（Claude Code 利用者は [Claude 版](01-agent-skills.claude.md)） |
 | Lab 2 | [MAF で Microsoft 最新情報エージェント作成](02-maf-agent.md)（Copilot に作らせる） |
 | Lab 3 | [Hosted Agent を Foundry へデプロイ](03-foundry-deploy.md) |
 | Lab 4 | [トレース確認と Cloud Evaluation](04-trace-evaluation.md) |
