@@ -193,6 +193,7 @@ python src/agent.py "Microsoft 365 Copilot のロードマップで Outlook 関�
 | `ChatClientInvalidResponseException: Failed to resolve model info` | `.env` の `FOUNDRY_MODEL` が actual deployment 名と不一致。Foundry portal `Models + endpoints` で確認 |
 | `Tool 'search_microsoft_*' not found` | MCP URL が間違っている。`https://www.microsoft.com/releasecommunications/mcp` を再確認 |
 | MCP ツールが呼ばれない | `instructions` で「**必ず MCP のツールを使って**情報を取得し、推測で答えてはいけない」と明示。さらに「結果が空なら "情報が見つかりませんでした" と答える」を加えると改善 |
+| 応答の先頭に `Can't parse tool.` と出る | hosted ツール (例: `get_web_search_tool()`) を `.as_dict()` 無しで `tools=` に渡している。`agent-framework-foundry` 1.8.1 + 現行 `azure-ai-projects` では戻り値が `dict` ではなく `MutableMapping` のため、フレームワークが警告を出して**そのツールを黙って破棄**する (エラーにはならず MCP 等の残りのツールだけで動く)。`client.get_web_search_tool().as_dict()` のように `.as_dict()` を付ける。詳細は 2-5 を参照 |
 
 ---
 
@@ -304,6 +305,9 @@ src/agent.py の tools に FoundryChatClient.get_web_search_tool() を追加し�
 instructions に「MCP で取得した一次情報に加えて、補足や関連ブログを探すときは
 Web 検索を使ってよい」と追記してください。
 ```
+
+> [!IMPORTANT]
+> **`get_web_search_tool()` は `.as_dict()` を付けて渡す** (`tools=[mrc_mcp, client.get_web_search_tool().as_dict()]`)。`agent-framework-foundry` 1.8.1 + 現行 `azure-ai-projects` では戻り値 `WebSearchTool` が `dict` ではなく `MutableMapping` 型のため、`.as_dict()` 無しで `tools=` に渡すと、フレームワークが応答先頭に `Can't parse tool.` という警告を出して**そのツールを黙って破棄**します (実行はエラーにならず MCP だけで動くので気付きにくい)。「Web 検索も使います」と回答に書かれても実際には検索していない、という状態になります。`.as_dict()` を付けると `{'type': 'web_search'}` というプレーン dict に変換され、正しく登録されます。なお Web 検索は **Azure OpenAI モデル (既定の `gpt-4.1-mini` など) でのみ動作**します。
 
 ---
 
