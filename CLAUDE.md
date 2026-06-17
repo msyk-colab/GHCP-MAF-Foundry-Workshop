@@ -59,6 +59,7 @@
 - **既定リージョン・モデル・ロールを勝手に書き換えない**。`eastus` / `gpt-4o` 等を提案すると Lab 3 のデプロイが落ちます ([`.github/copilot-instructions.md`](.github/copilot-instructions.md) の表を参照)。
 - **`.env` は自動ロードされません**。Python スクリプト先頭で `from dotenv import load_dotenv; load_dotenv()` を必ず呼ぶこと。
 - **既存 `docs/` の Lab 手順を勝手に書き換えない**。参加者が混乱します。
+- **Windows 環境では `AzureCliCredential` のタイムアウトに注意**。`az` のコールドスタートが遅く、既定 `process_timeout=10` 秒を超えて `Failed to invoke the Azure CLI` で落ちることがある。自分で書くスクリプトでは `AzureCliCredential(process_timeout=30)` を既定にする。また Agent Framework のスクリプトは Git Bash ではなく **PowerShell から実行**する (Git Bash 経由だと `cmd` に渡る PATH 形式の都合で `az` を発見できない)。詳細は [`docs/troubleshooting-windows.md`](docs/troubleshooting-windows.md)。
 
 ## 関連ドキュメント
 
