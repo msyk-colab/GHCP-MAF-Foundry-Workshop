@@ -10,6 +10,9 @@
 > [!NOTE]
 > この Lab は講師による解説セッションです。Lab 2 以降では、ここで紹介するカスタマイズが「効いている」前提で Copilot を活用してエージェントを構築します。
 
+> [!TIP]
+> **Claude Code を使う場合** は、本ファイルと対になる [Lab 1 (Claude Code 版)](01-agent-skills.claude.md) を参照してください。Custom Instructions / Custom Agents が Claude Code の `CLAUDE.md` / サブエージェント / スラッシュ コマンドにどう対応するかを解説しています。
+
 ---
 
 ## 1-1. 全体像: Copilot カスタマイズの階層
