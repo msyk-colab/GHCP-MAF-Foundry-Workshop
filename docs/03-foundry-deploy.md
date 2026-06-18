@@ -40,8 +40,14 @@ requirements.txt                                    │
 ```bash
 azd version                       # 1.25.3 以上 (source-code deploy に必要)
 azd ext list                      # azure.ai.agents が表示されること
-az account show
+az account show                   # Azure CLI のログイン状態
+azd auth login --check-status     # azd は az とは別ログイン。未ログインなら azd auth login
 ```
+
+`azd` は **`az` とは別物**で、ログインも別管理です。`az login` 済みでも `azd auth login` を別途実行する必要があります。`azd` コマンドが見つからない / ログインで詰まる場合は [`troubleshooting-windows.md`](troubleshooting-windows.md) を参照してください。
+
+> [!WARNING]
+> **Hosted Agent はリージョン限定 (preview)** です。`East US` は **対象外** で、`azd ai agent init` が `not eligible for the current configuration` で失敗します。対応リージョンは `Japan East` / `East US 2` / `Sweden Central` などです (最新の一覧は [Hosted agents の region availability](https://learn.microsoft.com/en-us/azure/foundry/agents/concepts/hosted-agents#region-availability) を参照)。Lab 0 で **非対応リージョン (例: `eastus`) に Foundry プロジェクトを作ってしまった場合は再利用できません**。その場合は `azd ai agent init` で `--project-id` を付けず、`azd env set AZURE_LOCATION <対応リージョン>` を設定して `azd up` で**新しい Foundry プロジェクトを作成**してください (本 Lab 末尾のトラブルシューティング参照)。
 
 ### `.env` の中身確認
 
@@ -225,6 +231,9 @@ mcp
 
 `aiohttp` は `FoundryChatClient` の HTTP クライアントが使うため、明示的に含めておくとデプロイ時の依存解決エラーを避けられます。無いものがあれば追記してください。
 
+> [!IMPORTANT]
+> **`mcp` は必須**です。`agent-framework-foundry-hosting` は import 時に `mcp` パッケージへ依存しており、`requirements.txt` に `mcp` が無いと**デプロイ後のコンテナ起動が `ModuleNotFoundError: No module named 'mcp'` でクラッシュ**します。その結果 `/readiness` が応答せず、`azd ai agent invoke` が `session_not_ready` (HTTP 424) になります (本 Lab 末尾のトラブルシューティング参照)。
+
 ---
 
 ## 3-4. `azd up` で provision + deploy を一括実行
@@ -335,6 +344,10 @@ azd ai agent init --deploy-mode container --runtime python_3_13
 | 症状 | 対処 |
 |---|---|
 | `azd ai agent init` が `--deploy-mode` オプションを認識しない | `azd extension upgrade azure.ai.agents` を実行して拡張を最新化 |
+| `azd ai agent init` が `not eligible for the current configuration` | Foundry プロジェクトのリージョンが Hosted Agent **非対応** (例: `eastus`)。`--project-id` を付けず `azd env set AZURE_LOCATION <対応リージョン>` を設定し、`azd up` で対応リージョンに**新規プロジェクトを作成**する。`azd ai agent sample list` のマニフェスト URL を `-m` に渡せば `--no-prompt` でも実行可能 |
+| `azd up` が `error unmarshalling Bicep template parameters` | `azd env set` で渡したモデル デプロイ等の JSON 値が壊れている。`azd ai agent init` に値を解決させる (`AZURE_SUBSCRIPTION_ID` / `AZURE_LOCATION` を先に `azd env set` してから再 init) のが確実 |
+| `azd up` が `event-postdeploy ... AZURE_TENANT_ID is not set` | `azd env set AZURE_TENANT_ID <テナントID>` を設定して `azd deploy` を再実行。デプロイ自体は成功しているので provision はやり直し不要 |
+| `azd ai agent invoke` が `session_not_ready` (HTTP 424) | コンテナ起動失敗。`azd ai agent monitor --type console --tail 300` でログ確認。`ModuleNotFoundError: No module named 'mcp'` なら `requirements.txt` に `mcp` を追加して `azd deploy` |
 | `SubscriptionNotRegistered` | `az provider register --namespace Microsoft.CognitiveServices` |
 | `AuthorizationFailed` during provisioning | **Foundry Project Manager** + **Contributor** が必要。Lab 0 を再確認 |
 
