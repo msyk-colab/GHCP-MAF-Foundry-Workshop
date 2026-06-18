@@ -45,3 +45,40 @@ Git Bash の `PATH` は POSIX 形式 (`/c/...`)。Python が認証時に `cmd` �
 ### 対処
 
 Agent Framework のスクリプトは **PowerShell (または VS Code の統合ターミナル)** から実行する。`az login` と `azd auth login` も同じシェルで済ませておく。
+
+## 3. `azd` が PATH に無い / `azd auth login` は `az login` とは別
+
+### 症状
+
+- `azd` を実行すると `The term 'azd' is not recognized ...` になる (一方 `az` は動く)。
+- `azd ai agent init` が `not logged in, run 'azd auth login'` で失敗する (`az login` 済みなのに)。
+- `azd` をフルパスで起動すると、今度は `AzureDeveloperCLICredential: executable not found on path` で失敗する。
+
+### 原因
+
+- **`azd` (Azure Developer CLI) は `az` (Azure CLI) とは別の実行ファイル・別のログイン**。`az login` と `azd auth login` はそれぞれ必要。
+- Windows の winget 等で入れた `azd` は `%LOCALAPPDATA%\Programs\Azure Dev CLI\azd.exe` にあり、シェルの `PATH` に通っていないことがある。
+- `azd` の内部処理 (Foundry プロジェクト照会など) は認証情報プロバイダ `AzureDeveloperCLICredential` を使い、これが**子プロセスで `azd` を PATH から探す**。そのため `azd` をフルパスで起動しただけでは内部認証が `executable not found on path` で失敗する。**`azd` 自体を PATH に通す**必要がある。
+
+### 対処
+
+`azd` を PATH に通す (新しいセッションでも有効にする例):
+
+```powershell
+$azdDir = "$env:LOCALAPPDATA\Programs\Azure Dev CLI"
+$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+if ($userPath -split ';' -notcontains $azdDir) {
+    [Environment]::SetEnvironmentVariable('Path', $userPath.TrimEnd(';') + ';' + $azdDir, 'User')
+}
+$env:Path += ";$azdDir"   # 現在のセッションにも即反映
+```
+
+> [!NOTE]
+> `setx` は `PATH` を 1024 文字で切り詰める既知の問題があるため、上記のように .NET の `SetEnvironmentVariable` で追記するのが安全。
+
+その後、Azure へサインインする (ブラウザが開く):
+
+```powershell
+azd auth login
+azd auth login --check-status   # ログイン済みか確認
+```
