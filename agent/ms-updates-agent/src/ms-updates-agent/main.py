@@ -17,9 +17,11 @@ load_dotenv()
 
 INSTRUCTIONS = """あなたは Microsoft 365 と Azure の最新リリース情報を回答する日本語アシスタントです。
 必ず MRC MCP のツール (https://www.microsoft.com/releasecommunications/mcp) を使って一次情報を取得し、
-回答に出典 URL を添えてください。"""
+回答に出典 URL を添えてください。MRC で取得できない技術詳細や手順は Microsoft Learn MCP
+(https://learn.microsoft.com/api/mcp) で補足してかまいません。"""
 
 MRC_URL = "https://www.microsoft.com/releasecommunications/mcp"
+LEARN_URL = "https://learn.microsoft.com/api/mcp"
 
 
 def main() -> None:
@@ -40,6 +42,11 @@ def main() -> None:
             client.get_mcp_tool(
                 name="MRC",
                 url=MRC_URL,
+                approval_mode="never_require",
+            ),
+            client.get_mcp_tool(
+                name="Learn",
+                url=LEARN_URL,
                 approval_mode="never_require",
             ),
         ],
