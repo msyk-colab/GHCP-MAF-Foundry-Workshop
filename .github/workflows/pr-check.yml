@@ -47,6 +47,8 @@ jobs:
           FOUNDRY_MODEL: ${{ vars.FOUNDRY_MODEL }}
           HOSTED_AGENT_NAME: ${{ vars.HOSTED_AGENT_NAME }}
           HOSTED_AGENT_VERSION: ${{ vars.HOSTED_AGENT_VERSION }}
+          # 5-6 品質ゲートの合格率しきい値 (未設定なら evaluate.py 側で 0.7)
+          EVAL_PASS_THRESHOLD: ${{ vars.EVAL_PASS_THRESHOLD }}
         run: |
           # pipefail が無いと python の失敗が tee の成功で隠れ、評価エラーでもジョブが緑になる
           set -o pipefail

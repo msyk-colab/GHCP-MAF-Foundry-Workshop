@@ -178,6 +178,22 @@ def main() -> None:
     if final_status != "completed":
         raise RuntimeError(f"Cloud Evaluation run が completed になりませんでした: {final_status}")
 
+    # ★Stretch (5-6): 合格率が閾値未満なら CI を fail させる品質ゲート。
+    # 閾値は EVAL_PASS_THRESHOLD で上書き可能 (既定 0.7)。
+    final = client.evals.runs.retrieve(eval_id=eval_definition.id, run_id=run.id)
+    counts = getattr(final, "result_counts", None)
+    passed = getattr(counts, "passed", 0) or 0
+    total = getattr(counts, "total", 0) or 0
+    ratio = passed / total if total else 0.0
+    print(f"pass_ratio={ratio:.2f} ({passed}/{total})")
+
+    # 未設定 / 空文字 (GitHub Actions の vars 未設定時) は既定 0.7。
+    threshold = float((os.getenv("EVAL_PASS_THRESHOLD") or "0.7").strip())
+    if ratio < threshold:
+        # ::error:: は GitHub Actions の注釈構文 (PR の Files changed に警告マーカー)。
+        print(f"::error::pass_ratio {ratio:.2f} < threshold {threshold}")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     try:
