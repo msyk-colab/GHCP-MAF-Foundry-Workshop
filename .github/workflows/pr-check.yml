@@ -48,6 +48,8 @@ jobs:
           HOSTED_AGENT_NAME: ${{ vars.HOSTED_AGENT_NAME }}
           HOSTED_AGENT_VERSION: ${{ vars.HOSTED_AGENT_VERSION }}
         run: |
+          # pipefail が無いと python の失敗が tee の成功で隠れ、評価エラーでもジョブが緑になる
+          set -o pipefail
           python ci/run_evaluate.py | tee eval.log
           RUN_ID=$(grep "Run started:" eval.log | awk '{print $3}')
           URL=$(grep "^Result:"      eval.log | awk '{print $2}')
