@@ -43,11 +43,13 @@ def _require_env(name: str) -> str:
 
 # --- 2. MRC MCP (認証不要のパブリック エンドポイント) ---
 MRC_MCP_URL = "https://www.microsoft.com/releasecommunications/mcp"
+LEARN_MCP_URL = "https://learn.microsoft.com/api/mcp"
 
 INSTRUCTIONS = (
     "あなたは Microsoft 365 と Azure の最新リリース情報を回答する日本語アシスタントです。\n"
     "回答時のルール:\n"
     "- 質問に答えるときは必ず MRC ツールを呼び出して一次情報を取得すること。\n"
+    "- MRC で取得できない技術詳細や手順は Microsoft Learn MCP で補足してよい。\n"
     "- MRC で取得した一次情報に加えて、補足や関連ブログ (個別記事 / StackOverflow など) を"
     "探すときは Web 検索を使ってよい。ただし一次情報は MRC を優先すること。\n"
     "- 回答は必ず日本語で書くこと。\n"
@@ -99,6 +101,12 @@ async def main() -> None:
         url=MRC_MCP_URL,
         load_prompts=False,
     )
+    # Microsoft Learn 公式 MCP。MRC で取れない技術詳細・手順の補足に使う。
+    learn_mcp = MCPStreamableHTTPTool(
+        name="Learn",
+        url=LEARN_MCP_URL,
+        load_prompts=False,
+    )
 
     # canonical pattern: credential は async with、client は代入のみ、
     # agent を async with で閉じる。
@@ -120,7 +128,7 @@ async def main() -> None:
         async with client.as_agent(
             name="MSUpdatesAgent",
             instructions=INSTRUCTIONS,
-            tools=[mrc_mcp, web_search],
+            tools=[mrc_mcp, web_search, learn_mcp],
         ) as agent:
             await run_interactive(agent)
 
