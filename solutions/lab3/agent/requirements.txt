@@ -3,3 +3,4 @@ agent-framework-foundry-hosting
 aiohttp
 azure-identity
 python-dotenv
+mcp
