@@ -183,8 +183,18 @@ def main() -> None:
     final = client.evals.runs.retrieve(eval_id=eval_definition.id, run_id=run.id)
     counts = getattr(final, "result_counts", None)
     passed = getattr(counts, "passed", 0) or 0
+    failed = getattr(counts, "failed", 0) or 0
+    errored = getattr(counts, "errored", 0) or 0
+    skipped = getattr(counts, "skipped", 0) or 0
     total = getattr(counts, "total", 0) or 0
     ratio = passed / total if total else 0.0
+    # errored = 採点不能 (例: エージェントが空応答 → evaluator が "Response string cannot
+    # be empty")。pass_ratio は errored も分母に含める (= 厳しめ)。Foundry ポータルの
+    # 評価器スコア (%) は採点済み件数 passed+failed を分母にするため値がズレる点に注意。
+    print(
+        f"result_counts: passed={passed} failed={failed} errored={errored} "
+        f"skipped={skipped} total={total}"
+    )
     print(f"pass_ratio={ratio:.2f} ({passed}/{total})")
 
     # 未設定 / 空文字 (GitHub Actions の vars 未設定時) は既定 0.7。
